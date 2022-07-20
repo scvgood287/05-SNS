@@ -3,7 +3,7 @@ import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
 import { Document, Types } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { Post } from '../post/post.schema';
-import ProtectedUserResponse from './responses/protectedUser.response';
+import ProtectedUser from './entities/protectedUser.entity';
 
 @Schema({ timestamps: true, id: false, _id: false })
 export class User {
@@ -26,7 +26,7 @@ export class User {
   @Prop({ type: [Types.ObjectId], ref: Post.name })
   readonly posts: Post[];
 
-  readonly protectedData: ProtectedUserResponse;
+  readonly protectedData: ProtectedUser;
 }
 
 export type UserDocument = User & Document;

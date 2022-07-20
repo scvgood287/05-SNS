@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class ProtectedUserResponse {
+export default class ProtectedUser {
   @ApiProperty({ description: '유저 이메일', example: 'test@mail.com' })
   email: string;
 

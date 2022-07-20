@@ -1,24 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
-import { CreateUserDTO } from './dto';
+import { CreateUserDTO, UpdateUserDTO } from './dto';
 import { User, UserDocument } from './user.schema';
 import { ConfigService } from '@nestjs/config';
-import bcrypt from 'bcrypt';
+import { hash } from 'src/utils/bcrypt';
 
 @Injectable()
 export default class UserRepository {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: SoftDeleteModel<UserDocument>,
-    private readonly configService: ConfigService,
   ) {}
 
   async createUser(createUserDTO: CreateUserDTO): Promise<User> {
-    const hashedPassword: string = await bcrypt.hash(
-      createUserDTO.password,
-      this.configService.get<number>('SALT_ROUNDS'),
-    );
+    const hashedPassword: string = await hash(createUserDTO.password);
     const user = await this.userModel.create({
       ...createUserDTO,
       hashedPassword,
@@ -29,6 +25,14 @@ export default class UserRepository {
 
   async getUserByEmail(email: string): Promise<User | null> {
     const user = await this.userModel.findOne({ email });
+
+    return user;
+  }
+
+  async updateUser(updateUserDTO: UpdateUserDTO) {
+    const { email, ...update } = updateUserDTO;
+
+    const user = await this.userModel.findOneAndUpdate({ email }, update, { new: true });
 
     return user;
   }

@@ -15,7 +15,7 @@ export default class LoginStrategy extends PassportStrategy(Strategy, CONSTANT_L
     });
   }
 
-  async validate(email: string, password: string): Promise<Tokens> {
+  async validate(email: string, password: string) {
     try {
       const user = await this.authService.validateEmail(email);
       await this.authService.validatePassword(password, user.hashedPassword);
@@ -24,8 +24,11 @@ export default class LoginStrategy extends PassportStrategy(Strategy, CONSTANT_L
       const refreshToken = this.authService.createRefreshToken(email);
 
       return {
-        accessToken,
-        refreshToken,
+        user: user.protectedData,
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
       };
     } catch (err) {
       throw err;

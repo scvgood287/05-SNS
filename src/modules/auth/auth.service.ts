@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../user';
-import bcrypt from 'bcrypt';
+import { compare } from 'src/utils/bcrypt';
 import { UserAlreadyExists, UserNotFound, WrongPassword } from 'src/status/error';
 import { BadRequestException } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common';
@@ -27,7 +27,7 @@ export default class AuthService {
   }
 
   async validatePassword(password: string, hashedPassword: string): Promise<boolean> {
-    const isCorrectPassword = await bcrypt.compare(password, hashedPassword);
+    const isCorrectPassword = await compare(password, hashedPassword);
 
     if (!isCorrectPassword) {
       throw new BadRequestException(WrongPassword.message);
@@ -37,7 +37,7 @@ export default class AuthService {
   }
 
   async validateRefreshToken(refreshToken: string, hashedRefreshToken: string): Promise<boolean> {
-    const isCorrectRefreshToken = await bcrypt.compare(refreshToken, hashedRefreshToken);
+    const isCorrectRefreshToken = await compare(refreshToken, hashedRefreshToken);
 
     if (!isCorrectRefreshToken) {
       throw new UnauthorizedException();
