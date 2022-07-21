@@ -1,6 +1,11 @@
-export const UserAlreadyExists = {
+export const UserAlreadyExistEmail = {
   code: 400,
   message: '이미 사용 중인 이메일입니다',
+};
+
+export const UserAlreadyExistNickname = {
+  code: 400,
+  message: '이미 사용 중인 닉네임입니다',
 };
 
 export const UserNotFound = {

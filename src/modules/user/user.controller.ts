@@ -1,15 +1,12 @@
 import { Get, Res } from '@nestjs/common';
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { AuthService } from '../auth';
-import { LoginGuard, RefreshJWTGuard } from '../auth/guards';
-import { CreateUserDTO } from './dto';
-import { SignUp, ProtectedUser } from './entities';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SignUpGuard, LoginGuard, RefreshJWTGuard } from '../auth/guards';
+import { CreateUserDTO, LoginDTO } from './dto';
 import UserService from './user.service';
 import { Response, Request } from 'express';
-import { CONSTANT_REFRESH } from 'src/constants';
-import { responseHandler } from 'src/utils/response';
+import { CONSTANT_ACCESS, CONSTANT_REFRESH } from 'src/constants';
+import { defaultTokenCookieOption, responseHandler } from 'src/utils/response';
 import { ConfigService } from '@nestjs/config';
 import { hash } from 'src/utils/bcrypt';
 
@@ -19,18 +16,24 @@ export default class UserController {
   constructor(private readonly userService: UserService, private readonly configService: ConfigService) {}
 
   @Post('signUp')
+  @UseGuards(SignUpGuard)
+  @ApiBody({ type: CreateUserDTO })
+  @ApiOperation({ description: '유저 회원가입 API 입니다.', summary: '유저 회원가입' })
   async signUp(@Res({ passthrough: true }) res: Response, @Body() createUserDTO: CreateUserDTO) {
     const user = await this.userService.signUp(createUserDTO);
+    // 이메일 검증 Strategy 필요
 
     responseHandler(res, {
       json: user,
       statusCode: 201,
-      statusMessage: '회원가입에 성공했습니다.',
     });
   }
 
   @Post('login')
   @UseGuards(LoginGuard)
+  @ApiBearerAuth('Authorization')
+  @ApiBody({ type: LoginDTO })
+  @ApiOperation({ description: '유저 로그인 API 입니다.', summary: '유저 로그인' })
   async login(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
     const {
       user: {
@@ -44,18 +47,19 @@ export default class UserController {
     await this.userService.setRefreshToken({ email, hashedRefreshToken });
 
     responseHandler(res, {
-      header: [
-        ['Authorization', accessToken],
-        [CONSTANT_REFRESH, refreshToken],
+      cookie: [
+        [CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true)],
+        [CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false)],
       ],
       statusCode: 200,
-      statusMessage: '로그인에 성공했습니다.',
     });
   }
 
   @Get('refreshAccessToken')
   @UseGuards(RefreshJWTGuard)
-  async refreshAccessToken(@Res({ passthrough: true }) res: Response, req: Request) {
+  @ApiBearerAuth('Authorization')
+  @ApiOperation({ description: '유저 토큰 재발급 API 입니다.', summary: '유저 토큰 재발급' })
+  async refreshAccessToken(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
     const {
       user: {
         user: { email },
@@ -68,12 +72,11 @@ export default class UserController {
     await this.userService.setRefreshToken({ email, hashedRefreshToken });
 
     responseHandler(res, {
-      header: [
-        ['Authorization', accessToken],
-        [CONSTANT_REFRESH, refreshToken],
+      cookie: [
+        [CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true)],
+        [CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false)],
       ],
       statusCode: 200,
-      statusMessage: '토큰 재발급에 성공했습니다.',
     });
   }
 }

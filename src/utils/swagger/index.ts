@@ -9,16 +9,20 @@ export const setupSwagger = (app: INestApplication): void => {
     .addBearerAuth(
       {
         type: 'http',
-        description: 'access token 을 입력해주세요.',
-        name: 'accessToken',
+        description: 'Access Token 을 입력해주세요.',
+        name: 'JWT',
         in: 'HTTP Header Authorization',
         scheme: 'bearer',
         bearerFormat: 'JWT',
       },
-      'access-token',
+      'Authorization',
     )
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('api-docs', app, document);
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 };

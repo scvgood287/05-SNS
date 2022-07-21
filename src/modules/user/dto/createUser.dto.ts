@@ -21,10 +21,6 @@ export default class CreateUserDTO {
   readonly password: string;
 
   @ApiProperty({
-    description: '비밀번호 확인 (6~20글자 영문/숫자)',
-    example: 'password1234',
-  })
-  @ApiProperty({
     description: '닉네임 (2~16 한글/영문/숫자)',
     example: '한글nickname123',
   })

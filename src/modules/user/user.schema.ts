@@ -5,10 +5,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Post } from '../post/post.schema';
 import ProtectedUser from './entities/protectedUser.entity';
 
-@Schema({ timestamps: true, id: false, _id: false })
+@Schema({ timestamps: true, id: false })
 export class User {
   @ApiProperty({ description: '유저 이메일이자 고유 id', example: 'test@mail.com' })
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, _id: true })
   readonly email: string;
 
   @ApiProperty({ description: '유저 닉네임', example: '한글nickname123' })
@@ -32,6 +32,8 @@ export class User {
 export type UserDocument = User & Document;
 export const UserSchema = SchemaFactory.createForClass(User).plugin(softDeletePlugin);
 
+UserSchema.index({ createdAt: 1 });
+console.log(UserSchema.indexes());
 UserSchema.virtual('protectedData').get(function (this: User) {
   return {
     email: this.email,

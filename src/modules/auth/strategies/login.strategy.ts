@@ -3,7 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { CONSTANT_LOGIN } from 'src/constants';
 import AuthService from '../auth.service';
-import { Tokens } from '../entities';
 
 @Injectable()
 export default class LoginStrategy extends PassportStrategy(Strategy, CONSTANT_LOGIN) {
@@ -20,8 +19,8 @@ export default class LoginStrategy extends PassportStrategy(Strategy, CONSTANT_L
       const user = await this.authService.validateEmail(email);
       await this.authService.validatePassword(password, user.hashedPassword);
 
-      const accessToken = this.authService.createAccessToken(email);
-      const refreshToken = this.authService.createRefreshToken(email);
+      const accessToken = await this.authService.createAccessToken(email);
+      const refreshToken = await this.authService.createRefreshToken(email);
 
       return {
         user: user.protectedData,

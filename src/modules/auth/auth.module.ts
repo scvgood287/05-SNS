@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import AuthService from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
-import { AccessJWTStrategy, LoginStrategy, RefreshJWTStrategy } from './strategies';
+import { SignUpStrategy, LoginStrategy, AccessJWTStrategy, RefreshJWTStrategy } from './strategies';
+import { UserModule } from '../user';
 
 @Module({
   imports: [
@@ -9,8 +10,9 @@ import { AccessJWTStrategy, LoginStrategy, RefreshJWTStrategy } from './strategi
       secret: process.env.JWT_ACCESS_TOKEN_SECRET_KEY,
       signOptions: { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRESIN },
     }),
+    UserModule,
   ],
-  providers: [AuthService, AccessJWTStrategy, LoginStrategy, RefreshJWTStrategy],
+  providers: [AuthService, SignUpStrategy, LoginStrategy, AccessJWTStrategy, RefreshJWTStrategy],
   exports: [],
 })
 export default class AuthModule {}

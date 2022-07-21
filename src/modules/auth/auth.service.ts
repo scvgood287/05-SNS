@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../user';
 import { compare } from 'src/utils/bcrypt';
-import { UserAlreadyExists, UserNotFound, WrongPassword } from 'src/status/error';
+import { UserAlreadyExistNickname, UserAlreadyExistEmail, UserNotFound, WrongPassword } from 'src/status/error';
 import { BadRequestException } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -26,6 +26,32 @@ export default class AuthService {
     return user;
   }
 
+  async validateNickname(email: string): Promise<User> {
+    const user = await this.userRepository.getUserByNickname(email);
+
+    if (!user) {
+      throw new NotFoundException(UserNotFound.message);
+    }
+
+    return user;
+  }
+
+  async validateUser(email: string, nickname: string): Promise<boolean> {
+    const existedEmail = await this.userRepository.getUserByEmail(email);
+
+    if (!!existedEmail) {
+      throw new BadRequestException(UserAlreadyExistEmail.message);
+    }
+
+    const existedNickname = await this.userRepository.getUserByNickname(nickname);
+
+    if (!!existedNickname) {
+      throw new BadRequestException(UserAlreadyExistNickname.message);
+    }
+
+    return true;
+  }
+
   async validatePassword(password: string, hashedPassword: string): Promise<boolean> {
     const isCorrectPassword = await compare(password, hashedPassword);
 
@@ -46,24 +72,24 @@ export default class AuthService {
     return isCorrectRefreshToken;
   }
 
-  createAccessToken(email: string): string {
-    const accessToken = this.jwtService.sign(
+  async createAccessToken(email: string): Promise<string> {
+    const accessToken = await this.jwtService.signAsync(
       { email },
       {
         secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET_KEY'),
-        expiresIn: this.configService.get<string>('JWT_ACCESS_TOKEN_EXPIRESIN'),
+        expiresIn: this.configService.get<number>('JWT_ACCESS_TOKEN_EXPIRESIN'),
       },
     );
 
     return accessToken;
   }
 
-  createRefreshToken(email: string): string {
-    const refreshToken = this.jwtService.sign(
+  async createRefreshToken(email: string): Promise<string> {
+    const refreshToken = await this.jwtService.signAsync(
       { email },
       {
         secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET_KEY'),
-        expiresIn: this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRESIN'),
+        expiresIn: this.configService.get<number>('JWT_REFRESH_TOKEN_EXPIRESIN'),
       },
     );
 
