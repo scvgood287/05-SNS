@@ -17,3 +17,8 @@ export const WrongPassword = {
   code: 400,
   message: '잘못된 비밀번호입니다.',
 };
+
+export const UnAuthorizedUser = {
+  code: 403,
+  message: '권한이 없습니다.',
+};

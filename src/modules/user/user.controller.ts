@@ -1,5 +1,4 @@
-import { Get, Res } from '@nestjs/common';
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, Res, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SignUpGuard, LoginGuard, RefreshJWTGuard } from '../auth/guards';
 import { CreateUserDTO, LoginDTO } from './dto';
@@ -7,13 +6,12 @@ import UserService from './user.service';
 import { Response, Request } from 'express';
 import { CONSTANT_ACCESS, CONSTANT_REFRESH } from 'src/constants';
 import { defaultTokenCookieOption, responseHandler } from 'src/utils/response';
-import { ConfigService } from '@nestjs/config';
 import { hash } from 'src/utils/bcrypt';
 
-@ApiTags('user')
-@Controller('user')
+@ApiTags('users')
+@Controller('users')
 export default class UserController {
-  constructor(private readonly userService: UserService, private readonly configService: ConfigService) {}
+  constructor(private readonly userService: UserService) {}
 
   @Post('signUp')
   @UseGuards(SignUpGuard)
@@ -21,7 +19,6 @@ export default class UserController {
   @ApiOperation({ description: '유저 회원가입 API 입니다.', summary: '유저 회원가입' })
   async signUp(@Res({ passthrough: true }) res: Response, @Body() createUserDTO: CreateUserDTO) {
     const user = await this.userService.signUp(createUserDTO);
-    // 이메일 검증 Strategy 필요
 
     responseHandler(res, {
       json: user,

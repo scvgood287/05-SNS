@@ -1,7 +1,13 @@
 import { Module } from '@nestjs/common';
 import AuthService from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
-import { SignUpStrategy, LoginStrategy, AccessJWTStrategy, RefreshJWTStrategy } from './strategies';
+import {
+  SignUpStrategy,
+  LoginStrategy,
+  AccessJWTStrategy,
+  RefreshJWTStrategy,
+  UserAuthorizeStrategy,
+} from './strategies';
 import { UserModule } from '../user';
 
 @Module({
@@ -12,7 +18,7 @@ import { UserModule } from '../user';
     }),
     UserModule,
   ],
-  providers: [AuthService, SignUpStrategy, LoginStrategy, AccessJWTStrategy, RefreshJWTStrategy],
+  providers: [AuthService, SignUpStrategy, LoginStrategy, AccessJWTStrategy, RefreshJWTStrategy, UserAuthorizeStrategy],
   exports: [],
 })
 export default class AuthModule {}

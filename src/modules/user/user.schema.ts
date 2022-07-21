@@ -1,8 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
-import { Post } from '../post/post.schema';
 import ProtectedUser from './entities/protectedUser.entity';
 
 @Schema({ timestamps: true, id: false })
@@ -12,28 +11,23 @@ export class User {
   readonly email: string;
 
   @ApiProperty({ description: '유저 닉네임', example: '한글nickname123' })
-  @Prop({ required: true })
-  readonly nickname: string;
+  @Prop({ required: true, unique: true })
+  nickname: string;
 
   @ApiProperty({ description: '유저 비밀번호', example: 'password123' })
   @Prop({ required: true })
-  readonly hashedPassword: string;
+  hashedPassword: string;
 
   @ApiProperty({ description: '유저 리프레시 토큰' })
   @Prop({ default: '' })
-  readonly hashedRefreshToken: string;
+  hashedRefreshToken: string;
 
-  @Prop({ type: [Types.ObjectId], ref: Post.name })
-  readonly posts: Post[];
-
-  readonly protectedData: ProtectedUser;
+  protectedData: ProtectedUser;
 }
 
 export type UserDocument = User & Document;
 export const UserSchema = SchemaFactory.createForClass(User).plugin(softDeletePlugin);
 
-UserSchema.index({ createdAt: 1 });
-console.log(UserSchema.indexes());
 UserSchema.virtual('protectedData').get(function (this: User) {
   return {
     email: this.email,

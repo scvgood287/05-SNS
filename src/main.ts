@@ -9,7 +9,13 @@ async function bootstrap() {
 
   app.setGlobalPrefix('/api');
   app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true, //형식 안맞으면 거절
+      transform: true, //자동 자료형 변환
+    }),
+  );
 
   Swagger.setupSwagger(app);
 
