@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { CreateUserDTO, UpdateUserDTO } from './dto';
 import { User, UserDocument } from './user.schema';
-import { hash } from 'src/utils/bcrypt';
 
 @Injectable()
 export default class UserRepository {
@@ -12,12 +11,8 @@ export default class UserRepository {
     private readonly userModel: SoftDeleteModel<UserDocument>,
   ) {}
 
-  async createUser(createUserDTO: CreateUserDTO): Promise<User> {
-    const hashedPassword: string = await hash(createUserDTO.password);
-    const user = await this.userModel.create({
-      ...createUserDTO,
-      hashedPassword,
-    });
+  async createUser(createUserDTO: CreateUserDTO, hashedPassword: string): Promise<User> {
+    const user = await this.userModel.create({ ...createUserDTO, hashedPassword });
 
     return user;
   }

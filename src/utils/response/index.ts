@@ -14,7 +14,6 @@ export type ResponseHandlerOptions = Partial<Record<keyof Response, any>>;
 export const defaultTokenCookieOption = (isAccessToken): CookieOptions => {
   const maxAge = Number(process.env[`JWT_${isAccessToken ? 'ACCESS' : 'REFRESH'}_TOKEN_EXPIRESIN`]);
 
-  console.log(maxAge);
   return {
     domain: 'localhost',
     path: '/',
@@ -23,10 +22,10 @@ export const defaultTokenCookieOption = (isAccessToken): CookieOptions => {
   };
 };
 
+// 대체할 필요가 있겠음...
 export const responseHandler = (res: Response, options: ResponseHandlerOptions) => {
   const optionsArray = Object.entries(options);
   let jsonOrSend = [];
-  res.cookie;
 
   optionsArray.forEach(([key, value]) => {
     if (key === 'json' || key === 'send') {
@@ -36,9 +35,9 @@ export const responseHandler = (res: Response, options: ResponseHandlerOptions) 
     }
   });
 
-  res.cookie;
-
-  executeResponseHandler(res, jsonOrSend[0], jsonOrSend[1]);
+  if (jsonOrSend.length > 0) {
+    res[jsonOrSend[0]](jsonOrSend[1]);
+  }
 };
 
 export const executeResponseHandler = (res: Response, key, value) => {

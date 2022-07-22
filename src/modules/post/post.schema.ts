@@ -1,16 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../user/user.schema';
 import { Type } from 'class-transformer';
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, id: false })
 export class Post {
-  @ApiProperty({ description: '게시물 식별 id' })
-  @Prop({ type: Types.ObjectId })
-  readonly _id: Types.ObjectId;
-
   @ApiProperty({ description: '게시물 제목', example: '게시물 1의 제목' })
   @Prop({ required: true })
   title: string;

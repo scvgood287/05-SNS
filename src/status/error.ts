@@ -22,3 +22,8 @@ export const UnAuthorizedUser = {
   code: 403,
   message: '권한이 없습니다.',
 };
+
+export const PostNotFound = {
+  const: 404,
+  message: '존재하지 않는 게시물입니다.',
+};
