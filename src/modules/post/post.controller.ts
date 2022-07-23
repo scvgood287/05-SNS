@@ -17,7 +17,7 @@ import {
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { ApiOperation, ApiTags, ApiBody, ApiQuery, ApiParam } from '@nestjs/swagger';
-import { AccessJWTGuard } from '../auth/guards';
+import { AccessJWTGuard, RolesGuard } from '../auth/guards';
 import PostService from './post.service';
 import { CreatePostDTO, UpdatePostDTO, GetPostsDTO } from './dto';
 import { responseHandler } from 'src/utils/response';
@@ -25,13 +25,13 @@ import { OrderBysType, SortBysType } from 'src/utils/customTypes';
 
 @ApiTags('posts')
 @Controller('posts')
-@UseGuards(AccessJWTGuard)
 export default class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post('')
   @ApiBody({ type: CreatePostDTO })
   @ApiOperation({ description: '게시물 생성 API 입니다.', summary: '게시물 생성' })
+  @UseGuards(AccessJWTGuard)
   async createPost(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
@@ -51,7 +51,7 @@ export default class PostController {
   }
 
   @Patch('/:postId')
-  // @UseGuards(RolesGuard)
+  @UseGuards(RolesGuard)
   @ApiBody({ type: UpdatePostDTO })
   @ApiParam({
     name: 'postId',
@@ -63,15 +63,12 @@ export default class PostController {
   async updatePost(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
-    @Param('postId') postId,
     @Body() updatePostDTO: UpdatePostDTO,
   ) {
     const {
-      user: {
-        user: { email },
-      },
+      user: { post },
     } = req;
-    const isUpdated = await this.postService.updatePost(updatePostDTO, postId, email);
+    const isUpdated = await this.postService.updatePost(updatePostDTO, post);
 
     // response 수정 필요
     responseHandler(res, {
@@ -81,7 +78,7 @@ export default class PostController {
   }
 
   @Delete('/:postId')
-  // @UseGuards(RolesGuard)
+  @UseGuards(RolesGuard)
   @ApiParam({
     name: 'postId',
     description: '삭제할 게시물 고유 식별 ID',
@@ -89,13 +86,8 @@ export default class PostController {
     example: '62da0ab0f6500db35b449da3',
   })
   @ApiOperation({ description: '게시물 삭제 API 입니다. 복구 가능합니다.', summary: '게시물 삭제' })
-  async deletePost(@Res({ passthrough: true }) res: Response, @Req() req: Request, @Param('postId') postId) {
-    const {
-      user: {
-        user: { email },
-      },
-    } = req;
-    const isDeleted = await this.postService.deletePost(postId, email);
+  async deletePost(@Res({ passthrough: true }) res: Response, @Param('postId') postId) {
+    const isDeleted = await this.postService.deletePost(postId);
 
     // response 수정 필요
     responseHandler(res, {
@@ -105,7 +97,7 @@ export default class PostController {
   }
 
   @Patch('/restore/:postId')
-  // @UseGuards(RolesGuard)
+  @UseGuards(RolesGuard)
   @ApiParam({
     name: 'postId',
     description: '복구할 게시물 고유 식별 ID',
@@ -113,13 +105,8 @@ export default class PostController {
     example: '62da0ab0f6500db35b449da3',
   })
   @ApiOperation({ description: '게시물 복구 API 입니다.', summary: '게시물 복구' })
-  async restorePost(@Res({ passthrough: true }) res: Response, @Req() req: Request, @Param('postId') postId) {
-    const {
-      user: {
-        user: { email },
-      },
-    } = req;
-    const isRestored = await this.postService.restorePost(postId, email);
+  async restorePost(@Res({ passthrough: true }) res: Response, @Param('postId') postId) {
+    const isRestored = await this.postService.restorePost(postId);
 
     // response 수정 필요
     responseHandler(res, {

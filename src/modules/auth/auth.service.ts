@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../user';
 import { compare } from 'src/utils/bcrypt';
 import {
@@ -7,6 +7,7 @@ import {
   UserNotFound,
   WrongPassword,
   PostNotFound,
+  UnAuthorizedUser,
 } from 'src/status/error';
 import { BadRequestException } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common';
@@ -14,6 +15,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../user/user.schema';
 import { PostRepository } from '../post';
+import { PostDocument } from '../post/post.schema';
 
 @Injectable()
 export default class AuthService {
@@ -24,14 +26,18 @@ export default class AuthService {
     private readonly postRepository: PostRepository,
   ) {}
 
-  async authorizeUser(email: string, postId: string): Promise<boolean> {
-    const post = await this.postRepository.getPost(postId);
+  async authorizeUser(email: string, postId: string): Promise<PostDocument> {
+    const post = await this.postRepository.getPostById(postId);
 
     if (!post) {
       throw new NotFoundException(PostNotFound.message);
     }
 
-    return email === post.email;
+    if (post.email !== email) {
+      throw new ForbiddenException(UnAuthorizedUser.message);
+    }
+
+    return post;
   }
 
   async validateEmail(email: string): Promise<User> {

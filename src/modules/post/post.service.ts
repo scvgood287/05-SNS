@@ -5,7 +5,7 @@ import { OrderByEnum, SortOptions } from 'src/utils/customTypes';
 import { CreatePostDTO, UpdatePostDTO } from './dto';
 import GetPostsDTO from './dto/getPosts.dto';
 import PostRepository from './post.repository';
-import { Post } from './post.schema';
+import { Post, PostDocument } from './post.schema';
 
 @Injectable()
 export default class PostService {
@@ -25,61 +25,34 @@ export default class PostService {
 
   // 이 updatePost, deletePost, restorePost 각각 권한 처리, 에러 처리 리팩토링 필요.
   // 현재 같은 코드 반복 중. 권한 처리..는 Guard 에서 하기로
-  async updatePost(updatePostDTO: UpdatePostDTO, postId, email: string): Promise<boolean> {
+  async updatePost(updatePostDTO: UpdatePostDTO, post: PostDocument): Promise<boolean> {
     // const post = await this.postRepository.updatePost(updatePostDTO, postId);
-    const post = await this.postRepository.getPost(postId, { isDeleted: false });
-
-    if (!post) {
-      throw new NotFoundException(PostNotFound.message);
-    }
-
-    if (post.email !== email) {
-      throw new ForbiddenException(UnAuthorizedUser.message);
-    }
+    // const post = await this.postRepository.getPostById(postId, { isDeleted: false });
 
     if (updatePostDTO.hasOwnProperty('hashtags')) {
       updatePostDTO.hashtags = (updatePostDTO.hashtags as string).slice(1).split(',#');
     }
 
-    const { acknowledged, matchedCount } = await post.updateOne(updatePostDTO, { new: true });
+    const { acknowledged, matchedCount } = await this.postRepository.updateThisPost(updatePostDTO, post);
 
     return acknowledged && matchedCount === 1;
   }
 
-  async deletePost(postId, email: string): Promise<boolean> {
-    const post = await this.postRepository.getPost(postId, { isDeleted: false });
-
-    if (!post) {
-      throw new NotFoundException(PostNotFound.message);
-    }
-
-    if (post.email !== email) {
-      throw new ForbiddenException(UnAuthorizedUser.message);
-    }
-
+  async deletePost(postId): Promise<boolean> {
     const isDeleted = await this.postRepository.deletePost(postId);
 
     return isDeleted;
   }
 
-  async restorePost(postId, email: string): Promise<boolean> {
-    const post = await this.postRepository.getPost(postId, { isDeleted: true });
-
-    if (!post) {
-      throw new NotFoundException(PostNotFound.message);
-    }
-
-    if (post.email !== email) {
-      throw new ForbiddenException(UnAuthorizedUser.message);
-    }
-
+  async restorePost(postId): Promise<boolean> {
     const isRestored = await this.postRepository.restorePost(postId);
 
     return isRestored;
   }
 
   async getPost(postId): Promise<Post> {
-    const post = await this.postRepository.getPost(postId, { isDeleted: false });
+    const post = await this.postRepository.getPostById(postId, { isDeleted: false });
+    await this.postRepository.updateThisPost({ views: post.views + 1 }, post);
 
     return post;
   }
@@ -127,6 +100,7 @@ export default class PostService {
     // 그러므로 DP?(내가 생각하기엔 DP스럽다 생각함) 를 적용한 버킷 패턴을 구현해볼 예정이다.
     // 일단 지금은 구현부터...
     // 추후 버킷 패턴 구현
+    // https://darrengwon.tistory.com/826
     // https://www.mongodb.com/blog/post/paging-with-the-bucket-pattern--part-1
     const posts = await this.postRepository.getPosts(filter, sortOptions, page || 1, limit || 10);
 

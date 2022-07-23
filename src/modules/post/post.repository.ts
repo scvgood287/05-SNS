@@ -25,6 +25,10 @@ export default class PostRepository {
     return post;
   }
 
+  async updateThisPost(updatePostDTO: UpdatePostDTO, post: PostDocument) {
+    return await post.updateOne(updatePostDTO, { new: true });
+  }
+
   async deletePost(postId) {
     const { deleted } = await this.postModel.softDelete({ _id: postId });
 
@@ -37,7 +41,7 @@ export default class PostRepository {
     return restored === 1;
   }
 
-  async getPost(postId, filter?: FilterQuery<PostDocument>) {
+  async getPostById(postId, filter?: FilterQuery<PostDocument>) {
     const post = await this.postModel.findOne({ _id: postId, ...filter });
 
     return post;
