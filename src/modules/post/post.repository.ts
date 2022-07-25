@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery } from 'mongoose';
+import { FilterQuery, UpdateQuery } from 'mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { SortOptions } from 'src/utils/customTypes';
 import { UpdatePostDTO } from './dto';
@@ -19,8 +19,16 @@ export default class PostRepository {
     return post;
   }
 
-  async updatePost(updatePostDTO: UpdatePostDTO, postId, filter?: FilterQuery<PostDocument>): Promise<Post> {
-    const post = await this.postModel.findOneAndUpdate({ _id: postId, ...filter }, updatePostDTO);
+  async updatePost(
+    updatePostDTO: UpdatePostDTO,
+    postId,
+    filter?: FilterQuery<PostDocument>,
+    updateQuery?: UpdateQuery<PostDocument>,
+  ): Promise<Post> {
+    const post = await this.postModel.findOneAndUpdate(
+      { _id: postId, ...filter },
+      { ...updatePostDTO, ...updateQuery },
+    );
 
     return post;
   }

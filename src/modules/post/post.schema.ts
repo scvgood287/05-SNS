@@ -23,17 +23,19 @@ export class Post {
   @Prop({ default: 0 })
   likes: number;
 
-  @ApiProperty({ description: '게시물 싫어요 수', example: 29 })
-  @Prop({ default: 0 })
-  unlikes: number;
+  // 추후 구현
+  // @ApiProperty({ description: '게시물 싫어요 수', example: 29 })
+  // @Prop({ default: 0 })
+  // unlikes: number;
 
   @ApiProperty({ description: '게시물 조회 수', example: 91345 })
   @Prop({ default: 0 })
   views: number;
 
-  @ApiProperty({ description: '게시물 댓글 수', example: 913 })
-  @Prop({ default: 0 })
-  comments: number;
+  // 추후 구현
+  // @ApiProperty({ description: '게시물 댓글 수', example: 913 })
+  // @Prop({ default: 0 })
+  // comments: number;
 
   // User : Post = 1 : N
   @Prop({ type: String, ref: User.name })

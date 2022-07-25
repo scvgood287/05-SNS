@@ -1,9 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import CreatePostDTO from './createPost.dto';
+import { IsNumber, IsString } from 'class-validator';
 
-export default class UpdateUserDTO {
+export default class UpdatePostDTO {
   @ApiProperty({ description: '게시물 제목', example: '게시물 1의 제목 수정' })
   @IsString()
   readonly title?: string;

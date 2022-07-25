@@ -12,14 +12,20 @@ export class Like {
   readonly _id: Types.ObjectId;
 
   // User : View = 1 : N
+  @ApiProperty({ description: '좋아요 누른 유저 email' })
   @Prop({ type: String, ref: User.name })
   @Type(() => User)
   readonly email: string;
 
   // Post : View = 1 : N
+  @ApiProperty({ description: '해당 게시물 고유 식별 id' })
   @Prop({ type: Types.ObjectId, ref: Post.name })
   @Type(() => Post)
-  readonly post: Post;
+  readonly postId: Types.ObjectId;
+
+  @ApiProperty({ description: '좋아요 상태' })
+  @Prop({ type: Boolean })
+  isLiked: boolean;
 }
 
 export type LikeDocument = Like & Document;
