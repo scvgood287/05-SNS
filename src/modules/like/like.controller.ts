@@ -11,7 +11,7 @@ import {
 } from '@nestjs/swagger';
 import { AccessJWTGuard } from '../auth/guards';
 import { Response, Request } from 'express';
-import { responseHandler } from 'src/utils/response';
+import { createResponseData, responseHandler } from 'src/utils/response';
 import LikeService from './like.service';
 import { CONSTANT_ACCESS } from 'src/constants';
 import { UnAuthorizedToken, UserNotFound } from 'src/status/error';
@@ -34,7 +34,7 @@ export default class LikeController {
     name: 'postId',
     description: '좋아요 누른 게시물 고유 식별 ID',
     required: true,
-    example: '62da0ab0f6500db35b449da3',
+    example: '62deb22c5a02cd86349c40f5',
   })
   @ApiOperation({ description: '게시물 좋아요 API 입니다.', summary: '게시물 좋아요' })
   async likePost(@Res({ passthrough: true }) res: Response, @Req() req: Request, @Param('postId') postId) {
@@ -46,10 +46,14 @@ export default class LikeController {
 
     const isInserted = await this.likeService.likePost(email, postId);
 
-    responseHandler(res, {
-      statusCode: isInserted ? LikeCreatedResponse.code : LikeNoContentResponse.code,
-      statusMessage: isInserted ? LikeCreatedResponse.message : LikeNoContentResponse.message,
-    });
+    res
+      .status(isInserted ? LikeCreatedResponse.code : LikeNoContentResponse.code)
+      .json(createResponseData(isInserted ? LikeCreatedResponse : LikeNoContentResponse));
+
+    // responseHandler(res, {
+    //   statusCode: isInserted ? LikeCreatedResponse.code : LikeNoContentResponse.code,
+    //   json: createResponseData(isInserted ? LikeCreatedResponse : LikeNoContentResponse),
+    // });
   }
 
   @Put('/unlike/:postId')
@@ -63,7 +67,7 @@ export default class LikeController {
     name: 'postId',
     description: '좋아요 취소한 게시물 고유 식별 ID',
     required: true,
-    example: '62da0ab0f6500db35b449da3',
+    example: '62deb22c5a02cd86349c40f5',
   })
   @ApiOperation({ description: '게시물 좋아요 취소 API 입니다.', summary: '게시물 좋아요 취소' })
   async unlikePost(@Res({ passthrough: true }) res: Response, @Req() req: Request, @Param('postId') postId) {
@@ -75,9 +79,11 @@ export default class LikeController {
 
     await this.likeService.unlikePost(email, postId);
 
-    responseHandler(res, {
-      statusCode: UnlikeResponse.code,
-      statusMessage: UnlikeResponse.message,
-    });
+    res.status(UnlikeResponse.code).json(createResponseData(UnlikeResponse));
+
+    // responseHandler(res, {
+    //   statusCode: UnlikeResponse.code,
+    //   json: createResponseData(UnlikeResponse),
+    // });
   }
 }

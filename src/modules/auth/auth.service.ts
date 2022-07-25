@@ -28,73 +28,97 @@ export default class AuthService {
   ) {}
 
   async authorizeUser(email: string, postId: string): Promise<PostDocument> {
-    const post = await this.postRepository.getPostById(postId);
+    try {
+      const post = await this.postRepository.getPostById(postId);
 
-    if (!post) {
-      throw new NotFoundException(PostNotFound.message);
+      if (!post) {
+        throw new NotFoundException(PostNotFound.message);
+      }
+
+      if (post.email !== email) {
+        throw new ForbiddenException(UnAuthorizedUser.message);
+      }
+
+      return post;
+    } catch (err) {
+      throw err;
     }
-
-    if (post.email !== email) {
-      throw new ForbiddenException(UnAuthorizedUser.message);
-    }
-
-    return post;
   }
 
   async validateEmail(email: string): Promise<User> {
-    const user = await this.userRepository.getUserByEmail(email);
+    try {
+      const user = await this.userRepository.getUserByEmail(email);
 
-    if (!user) {
-      throw new NotFoundException(UserNotFound.message);
+      if (!user) {
+        throw new NotFoundException(UserNotFound.message);
+      }
+
+      return user;
+    } catch (err) {
+      throw err;
     }
-
-    return user;
   }
 
   async validateNickname(email: string): Promise<User> {
-    const user = await this.userRepository.getUserByNickname(email);
+    try {
+      const user = await this.userRepository.getUserByNickname(email);
 
-    if (!user) {
-      throw new NotFoundException(UserNotFound.message);
+      if (!user) {
+        throw new NotFoundException(UserNotFound.message);
+      }
+
+      return user;
+    } catch (err) {
+      throw err;
     }
-
-    return user;
   }
 
   async validateUser(email: string, nickname: string): Promise<boolean> {
-    const existedEmail = await this.userRepository.getUserByEmail(email);
+    try {
+      const existedEmail = await this.userRepository.getUserByEmail(email);
 
-    if (!!existedEmail) {
-      throw new BadRequestException(UserAlreadyExistEmail.message);
+      if (!!existedEmail) {
+        throw new BadRequestException(UserAlreadyExistEmail.message);
+      }
+
+      const existedNickname = await this.userRepository.getUserByNickname(nickname);
+
+      if (!!existedNickname) {
+        throw new BadRequestException(UserAlreadyExistNickname.message);
+      }
+
+      return true;
+    } catch (err) {
+      throw err;
     }
-
-    const existedNickname = await this.userRepository.getUserByNickname(nickname);
-
-    if (!!existedNickname) {
-      throw new BadRequestException(UserAlreadyExistNickname.message);
-    }
-
-    return true;
   }
 
   async validatePassword(password: string, hashedPassword: string): Promise<boolean> {
-    const isCorrectPassword = await compare(password, hashedPassword);
+    try {
+      const isCorrectPassword = await compare(password, hashedPassword);
 
-    if (!isCorrectPassword) {
-      throw new BadRequestException(WrongPassword.message);
+      if (!isCorrectPassword) {
+        throw new BadRequestException(WrongPassword.message);
+      }
+
+      return isCorrectPassword;
+    } catch (err) {
+      throw err;
     }
-
-    return isCorrectPassword;
   }
 
   async validateRefreshToken(refreshToken: string, hashedRefreshToken: string): Promise<boolean> {
-    const isCorrectRefreshToken = await compare(refreshToken, hashedRefreshToken);
+    try {
+      const isCorrectRefreshToken = await compare(refreshToken, hashedRefreshToken);
 
-    if (!isCorrectRefreshToken) {
-      throw new UnauthorizedException(UnAuthorizedToken.message);
+      if (!isCorrectRefreshToken) {
+        throw new UnauthorizedException(UnAuthorizedToken.message);
+      }
+
+      return isCorrectRefreshToken;
+    } catch (err) {
+      throw err;
     }
-
-    return isCorrectRefreshToken;
   }
 
   async createAccessToken(email: string): Promise<string> {

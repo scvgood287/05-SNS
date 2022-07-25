@@ -9,8 +9,6 @@ export default class LikeService {
   async likePost(email: string, postId: string): Promise<boolean> {
     const like = await this.likeRepository.updateLike(email, postId, true);
 
-    console.log(like);
-
     if (!like?.isLiked) {
       await this.postRepository.updatePost({}, postId, {}, { $inc: { likes: 1 } });
     }
@@ -21,12 +19,8 @@ export default class LikeService {
   async unlikePost(email: string, postId: string) {
     const like = await this.likeRepository.updateLike(email, postId, false);
 
-    console.log(like);
-
     if (like.isLiked) {
       await this.postRepository.updatePost({}, postId, {}, { $inc: { likes: -1 } });
     }
-
-    console.log(like);
   }
 }

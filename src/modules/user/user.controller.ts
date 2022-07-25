@@ -1,7 +1,6 @@
 import { Body, Controller, Post, Get, Res, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiBearerAuth,
   ApiBody,
   ApiCookieAuth,
   ApiCreatedResponse,
@@ -16,7 +15,7 @@ import { CreateUserDTO, LoginDTO } from './dto';
 import UserService from './user.service';
 import { Response, Request } from 'express';
 import { CONSTANT_ACCESS, CONSTANT_REFRESH } from 'src/constants';
-import { defaultTokenCookieOption, responseHandler } from 'src/utils/response';
+import { createResponseData, defaultTokenCookieOption, responseHandler } from 'src/utils/response';
 import { hash } from 'src/utils/bcrypt';
 import {
   UnAuthorizedToken,
@@ -26,6 +25,7 @@ import {
   WrongPassword,
 } from 'src/status/error';
 import { LoginResponse, RefreshTokenResponse, SignUpResponse } from 'src/status/success';
+import { ProtectedUser } from './entities';
 
 @ApiTags('users')
 @Controller('users')
@@ -43,11 +43,12 @@ export default class UserController {
   async signUp(@Res({ passthrough: true }) res: Response, @Body() createUserDTO: CreateUserDTO) {
     const user = await this.userService.signUp(createUserDTO);
 
-    responseHandler(res, {
-      json: user,
-      statusCode: SignUpResponse.code,
-      statusMessage: SignUpResponse.message,
-    });
+    res.status(SignUpResponse.code).json(createResponseData<ProtectedUser>(SignUpResponse, user));
+
+    // responseHandler(res, {
+    //   json: createResponseData<ProtectedUser>(SignUpResponse, user),
+    //   statusCode: SignUpResponse.code,
+    // });
   }
 
   @Post('login')
@@ -70,14 +71,20 @@ export default class UserController {
 
     await this.userService.setRefreshToken({ email, hashedRefreshToken });
 
-    responseHandler(res, {
-      cookie: [
-        [CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true)],
-        [CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false)],
-      ],
-      statusCode: LoginResponse.code,
-      statusMessage: LoginResponse.message,
-    });
+    res
+      .cookie(CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true))
+      .cookie(CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false))
+      .status(LoginResponse.code)
+      .json(createResponseData(LoginResponse));
+
+    // responseHandler(res, {
+    //   cookie: [
+    //     [CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true)],
+    //     [CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false)],
+    //   ],
+    //   statusCode: LoginResponse.code,
+    //   json: createResponseData(LoginResponse),
+    // });
   }
 
   @Get('refreshAccessToken')
@@ -100,13 +107,18 @@ export default class UserController {
 
     await this.userService.setRefreshToken({ email, hashedRefreshToken });
 
-    responseHandler(res, {
-      cookie: [
-        [CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true)],
-        [CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false)],
-      ],
-      statusCode: RefreshTokenResponse.code,
-      statusMessage: RefreshTokenResponse.message,
-    });
+    res
+      .cookie(CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true))
+      .cookie(CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false))
+      .status(RefreshTokenResponse.code);
+
+    // responseHandler(res, {
+    //   cookie: [
+    //     [CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true)],
+    //     [CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false)],
+    //   ],
+    //   statusCode: RefreshTokenResponse.code,
+    //   json: createResponseData(RefreshTokenResponse),
+    // });
   }
 }

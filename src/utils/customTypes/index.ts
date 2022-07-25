@@ -19,3 +19,15 @@ export const OrderByEnum: SortOptions = {
 };
 
 export type SortOptions = string | { [key: string]: SortOrder | { $meta: 'textScore' } } | undefined | null;
+
+export interface SuccessResponse {
+  code: number;
+  message: string;
+  type?: any;
+}
+
+export interface ResponseData<T> {
+  code: number;
+  message: string;
+  data: T | null;
+}

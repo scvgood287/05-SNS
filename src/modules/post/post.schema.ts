@@ -32,6 +32,10 @@ export class Post {
   @Prop({ default: 0 })
   views: number;
 
+  @ApiProperty({ description: '게시물 삭제 여부' })
+  @Prop({ default: false })
+  isDeleted: boolean;
+
   // 추후 구현
   // @ApiProperty({ description: '게시물 댓글 수', example: 913 })
   // @Prop({ default: 0 })

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CookieOptions, Response } from 'express';
+import { ResponseData, SuccessResponse } from '../customTypes';
 
 export class BaseResponse {
   @ApiProperty({ description: '응답 코드' })
@@ -51,3 +52,9 @@ export const executeResponseHandler = (res: Response, key, value) => {
     res[key] = value;
   }
 };
+
+export const createResponseData = <T = any>({ code, message }: SuccessResponse, data: T = null): ResponseData<T> => ({
+  code,
+  message,
+  data,
+});

@@ -33,7 +33,7 @@ import {
 import { AccessJWTGuard, RolesGuard } from '../auth/guards';
 import PostService from './post.service';
 import { CreatePostDTO, UpdatePostDTO, GetPostsDTO } from './dto';
-import { responseHandler } from 'src/utils/response';
+import { createResponseData, responseHandler } from 'src/utils/response';
 import { OrderBysType, SortBysType } from 'src/utils/customTypes';
 import { CONSTANT_ACCESS } from 'src/constants';
 import { PostNotFound, UnAuthorizedToken, UnAuthorizedUser, UserNotFound } from 'src/status/error';
@@ -45,6 +45,7 @@ import {
   RestorePostResponse,
   UpdatePostResponse,
 } from 'src/status/success';
+import { Post as PostType, Posts } from './post.schema';
 
 @ApiTags('posts')
 @Controller('posts')
@@ -72,11 +73,12 @@ export default class PostController {
     } = req;
     const post = await this.postService.createPost(createPostDTO, email);
 
-    responseHandler(res, {
-      json: post,
-      statusCode: CreatePostResponse.code,
-      statusMessage: CreatePostResponse.message,
-    });
+    res.status(CreatePostResponse.code).json(createResponseData<PostType>(CreatePostResponse, post));
+
+    // responseHandler(res, {
+    //   json: createResponseData<PostType>(CreatePostResponse, post),
+    //   statusCode: CreatePostResponse.code,
+    // });
   }
 
   @Patch('/:postId')
@@ -92,7 +94,7 @@ export default class PostController {
     name: 'postId',
     description: '수정할 게시물 고유 식별 ID',
     required: true,
-    example: '62da0ab0f6500db35b449da3',
+    example: '62deb22c5a02cd86349c40f5',
   })
   @ApiOperation({ description: '게시물 수정 API 입니다.', summary: '게시물 수정' })
   async updatePost(
@@ -105,12 +107,13 @@ export default class PostController {
     } = req;
     await this.postService.updatePost(updatePostDTO, post);
 
+    res.status(UpdatePostResponse.code).json(createResponseData<UpdatePostDTO>(UpdatePostResponse, updatePostDTO));
+
     // response 수정 필요
-    responseHandler(res, {
-      json: updatePostDTO,
-      statusCode: UpdatePostResponse.code,
-      statusMessage: UpdatePostResponse.message,
-    });
+    // responseHandler(res, {
+    //   json: createResponseData<UpdatePostDTO>(UpdatePostResponse, updatePostDTO),
+    //   statusCode: UpdatePostResponse.code,
+    // });
   }
 
   @Delete('/:postId')
@@ -125,17 +128,18 @@ export default class PostController {
     name: 'postId',
     description: '삭제할 게시물 고유 식별 ID',
     required: true,
-    example: '62da0ab0f6500db35b449da3',
+    example: '62deb22c5a02cd86349c40f5',
   })
   @ApiOperation({ description: '게시물 삭제 API 입니다. 복구 가능합니다.', summary: '게시물 삭제' })
   async deletePost(@Res({ passthrough: true }) res: Response, @Param('postId') postId) {
     await this.postService.deletePost(postId);
 
+    res.status(DeletePostResponse.code);
+
     // response 수정 필요
-    responseHandler(res, {
-      statusMessage: DeletePostResponse.message,
-      statusCode: DeletePostResponse.code,
-    });
+    // responseHandler(res, {
+    //   statusCode: DeletePostResponse.code,
+    // });
   }
 
   @Patch('/restore/:postId')
@@ -150,17 +154,18 @@ export default class PostController {
     name: 'postId',
     description: '복구할 게시물 고유 식별 ID',
     required: true,
-    example: '62da0ab0f6500db35b449da3',
+    example: '62deb22c5a02cd86349c40f5',
   })
   @ApiOperation({ description: '게시물 복구 API 입니다.', summary: '게시물 복구' })
   async restorePost(@Res({ passthrough: true }) res: Response, @Param('postId') postId) {
     await this.postService.restorePost(postId);
 
+    res.status(RestorePostResponse.code);
+
     // response 수정 필요
-    responseHandler(res, {
-      statusMessage: RestorePostResponse.message,
-      statusCode: RestorePostResponse.code,
-    });
+    // responseHandler(res, {
+    //   statusCode: RestorePostResponse.code,
+    // });
   }
 
   @Get('/:postId')
@@ -170,17 +175,18 @@ export default class PostController {
     name: 'postId',
     description: '상세 조회할 게시물 고유 식별 ID',
     required: true,
-    example: '62da0ab0f6500db35b449da3',
+    example: '62deb22c5a02cd86349c40f5',
   })
   @ApiOperation({ description: '게시물 상세 조회 API 입니다.', summary: '게시물 상세 조회' })
   async getPost(@Res({ passthrough: true }) res: Response, @Param('postId') postId) {
     const post = await this.postService.getPost(postId);
 
-    responseHandler(res, {
-      json: post,
-      statusCode: GetPostResponse.code,
-      statusMessage: GetPostResponse.message,
-    });
+    res.status(GetPostResponse.code).json(createResponseData<PostType>(GetPostResponse, post));
+
+    // responseHandler(res, {
+    //   json: createResponseData<PostType>(GetPostResponse, post),
+    //   statusCode: GetPostResponse.code,
+    // });
   }
 
   @Get('')
@@ -259,10 +265,11 @@ export default class PostController {
     const getPostsDTO: GetPostsDTO = { sortBy, orderBy, search, hashtags, page, limit };
     const posts = await this.postService.getPosts(getPostsDTO);
 
-    responseHandler(res, {
-      json: posts,
-      statusCode: GetPostsResponse.code,
-      statusMessage: GetPostsResponse.message,
-    });
+    res.status(GetPostsResponse.code).json(createResponseData<Posts>(GetPostsResponse, posts));
+
+    // responseHandler(res, {
+    //   json: createResponseData<Posts>(GetPostsResponse, posts),
+    //   statusCode: GetPostsResponse.code,
+    // });
   }
 }
