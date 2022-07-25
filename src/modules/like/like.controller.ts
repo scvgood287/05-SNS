@@ -1,9 +1,21 @@
 import { Controller, Param, Put, Req, Res, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { AccessJWTGuard } from '../auth/guards';
 import { Response, Request } from 'express';
 import { responseHandler } from 'src/utils/response';
 import LikeService from './like.service';
+import { CONSTANT_ACCESS } from 'src/constants';
+import { UnAuthorizedToken, UserNotFound } from 'src/status/error';
+import { LikeCreatedResponse, LikeNoContentResponse, UnlikeResponse } from 'src/status/success';
 
 @ApiTags('likes')
 @Controller('likes')
@@ -12,6 +24,12 @@ export default class LikeController {
 
   @Put('/like/:postId')
   @UseGuards(AccessJWTGuard)
+  // swagger
+  @ApiCookieAuth(CONSTANT_ACCESS)
+  @ApiUnauthorizedResponse({ description: UnAuthorizedToken.message })
+  @ApiNotFoundResponse({ description: UserNotFound.message })
+  @ApiCreatedResponse({ description: LikeCreatedResponse.message })
+  @ApiNoContentResponse({ description: LikeNoContentResponse.message })
   @ApiParam({
     name: 'postId',
     description: '좋아요 누른 게시물 고유 식별 ID',
@@ -29,12 +47,18 @@ export default class LikeController {
     const isInserted = await this.likeService.likePost(email, postId);
 
     responseHandler(res, {
-      statusCode: isInserted ? 201 : 204,
+      statusCode: isInserted ? LikeCreatedResponse.code : LikeNoContentResponse.code,
+      statusMessage: isInserted ? LikeCreatedResponse.message : LikeNoContentResponse.message,
     });
   }
 
   @Put('/unlike/:postId')
   @UseGuards(AccessJWTGuard)
+  // swagger
+  @ApiCookieAuth(CONSTANT_ACCESS)
+  @ApiUnauthorizedResponse({ description: UnAuthorizedToken.message })
+  @ApiNotFoundResponse({ description: UserNotFound.message })
+  @ApiNoContentResponse({ description: UnlikeResponse.message })
   @ApiParam({
     name: 'postId',
     description: '좋아요 취소한 게시물 고유 식별 ID',
@@ -52,7 +76,8 @@ export default class LikeController {
     await this.likeService.unlikePost(email, postId);
 
     responseHandler(res, {
-      statusCode: 204,
+      statusCode: UnlikeResponse.code,
+      statusMessage: UnlikeResponse.message,
     });
   }
 }

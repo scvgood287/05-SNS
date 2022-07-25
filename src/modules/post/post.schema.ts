@@ -43,6 +43,7 @@ export class Post {
   readonly email: string;
 }
 
+export type Posts = Array<Post>;
 export type PostDocument = Post & Document;
 export const PostSchema = SchemaFactory.createForClass(Post).plugin(softDeletePlugin);
 

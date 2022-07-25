@@ -8,6 +8,7 @@ import {
   WrongPassword,
   PostNotFound,
   UnAuthorizedUser,
+  UnAuthorizedToken,
 } from 'src/status/error';
 import { BadRequestException } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common';
@@ -90,7 +91,7 @@ export default class AuthService {
     const isCorrectRefreshToken = await compare(refreshToken, hashedRefreshToken);
 
     if (!isCorrectRefreshToken) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(UnAuthorizedToken.message);
     }
 
     return isCorrectRefreshToken;

@@ -16,12 +16,35 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { ApiOperation, ApiTags, ApiBody, ApiQuery, ApiParam } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiTags,
+  ApiBody,
+  ApiQuery,
+  ApiParam,
+  ApiCookieAuth,
+  ApiUnauthorizedResponse,
+  ApiNotFoundResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { AccessJWTGuard, RolesGuard } from '../auth/guards';
 import PostService from './post.service';
 import { CreatePostDTO, UpdatePostDTO, GetPostsDTO } from './dto';
 import { responseHandler } from 'src/utils/response';
 import { OrderBysType, SortBysType } from 'src/utils/customTypes';
+import { CONSTANT_ACCESS } from 'src/constants';
+import { PostNotFound, UnAuthorizedToken, UnAuthorizedUser, UserNotFound } from 'src/status/error';
+import {
+  CreatePostResponse,
+  DeletePostResponse,
+  GetPostResponse,
+  GetPostsResponse,
+  RestorePostResponse,
+  UpdatePostResponse,
+} from 'src/status/success';
 
 @ApiTags('posts')
 @Controller('posts')
@@ -29,9 +52,14 @@ export default class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post('')
-  @ApiBody({ type: CreatePostDTO })
-  @ApiOperation({ description: '게시물 생성 API 입니다.', summary: '게시물 생성' })
   @UseGuards(AccessJWTGuard)
+  // swagger
+  @ApiBody({ type: CreatePostDTO })
+  @ApiCookieAuth(CONSTANT_ACCESS)
+  @ApiUnauthorizedResponse({ description: UnAuthorizedToken.message })
+  @ApiNotFoundResponse({ description: UserNotFound.message })
+  @ApiCreatedResponse({ type: CreatePostResponse.type, description: CreatePostResponse.message })
+  @ApiOperation({ description: '게시물 생성 API 입니다.', summary: '게시물 생성' })
   async createPost(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
@@ -46,13 +74,20 @@ export default class PostController {
 
     responseHandler(res, {
       json: post,
-      statusCode: 201,
+      statusCode: CreatePostResponse.code,
+      statusMessage: CreatePostResponse.message,
     });
   }
 
   @Patch('/:postId')
   @UseGuards(RolesGuard)
+  // swagger
   @ApiBody({ type: UpdatePostDTO })
+  @ApiCookieAuth(CONSTANT_ACCESS)
+  @ApiUnauthorizedResponse({ description: UnAuthorizedToken.message })
+  @ApiNotFoundResponse({ description: PostNotFound.message })
+  @ApiForbiddenResponse({ description: UnAuthorizedUser.message })
+  @ApiOkResponse({ type: UpdatePostResponse.type, description: UpdatePostResponse.message })
   @ApiParam({
     name: 'postId',
     description: '수정할 게시물 고유 식별 ID',
@@ -68,17 +103,24 @@ export default class PostController {
     const {
       user: { post },
     } = req;
-    const isUpdated = await this.postService.updatePost(updatePostDTO, post);
+    await this.postService.updatePost(updatePostDTO, post);
 
     // response 수정 필요
     responseHandler(res, {
-      json: isUpdated ? '게시물이 성공적으로 수정되었습니다' : '게시물 수정에 실패했습니다. 다시 시도해주세요.',
-      statusCode: 200,
+      json: updatePostDTO,
+      statusCode: UpdatePostResponse.code,
+      statusMessage: UpdatePostResponse.message,
     });
   }
 
   @Delete('/:postId')
   @UseGuards(RolesGuard)
+  // swagger
+  @ApiCookieAuth(CONSTANT_ACCESS)
+  @ApiUnauthorizedResponse({ description: UnAuthorizedToken.message })
+  @ApiNotFoundResponse({ description: PostNotFound.message })
+  @ApiForbiddenResponse({ description: UnAuthorizedUser.message })
+  @ApiNoContentResponse({ description: DeletePostResponse.message })
   @ApiParam({
     name: 'postId',
     description: '삭제할 게시물 고유 식별 ID',
@@ -87,17 +129,23 @@ export default class PostController {
   })
   @ApiOperation({ description: '게시물 삭제 API 입니다. 복구 가능합니다.', summary: '게시물 삭제' })
   async deletePost(@Res({ passthrough: true }) res: Response, @Param('postId') postId) {
-    const isDeleted = await this.postService.deletePost(postId);
+    await this.postService.deletePost(postId);
 
     // response 수정 필요
     responseHandler(res, {
-      // json: isDeleted ? '게시물이 성공적으로 삭제되었습니다.' : '게시물 삭제에 실패했습니다. 다시 시도해주세요.',
-      statusCode: 204,
+      statusMessage: DeletePostResponse.message,
+      statusCode: DeletePostResponse.code,
     });
   }
 
   @Patch('/restore/:postId')
   @UseGuards(RolesGuard)
+  // swagger
+  @ApiCookieAuth(CONSTANT_ACCESS)
+  @ApiUnauthorizedResponse({ description: UnAuthorizedToken.message })
+  @ApiNotFoundResponse({ description: PostNotFound.message })
+  @ApiForbiddenResponse({ description: UnAuthorizedUser.message })
+  @ApiOkResponse({ description: RestorePostResponse.message })
   @ApiParam({
     name: 'postId',
     description: '복구할 게시물 고유 식별 ID',
@@ -106,16 +154,18 @@ export default class PostController {
   })
   @ApiOperation({ description: '게시물 복구 API 입니다.', summary: '게시물 복구' })
   async restorePost(@Res({ passthrough: true }) res: Response, @Param('postId') postId) {
-    const isRestored = await this.postService.restorePost(postId);
+    await this.postService.restorePost(postId);
 
     // response 수정 필요
     responseHandler(res, {
-      // json: isRestored ? '게시물이 성공적으로 복구되었습니다.' : '게시물 복구에 실패했습니다. 다시 시도해주세요.',
-      statusCode: 200,
+      statusMessage: RestorePostResponse.message,
+      statusCode: RestorePostResponse.code,
     });
   }
 
   @Get('/:postId')
+  // swagger
+  @ApiOkResponse({ description: GetPostResponse.message, type: GetPostResponse.type })
   @ApiParam({
     name: 'postId',
     description: '상세 조회할 게시물 고유 식별 ID',
@@ -128,11 +178,14 @@ export default class PostController {
 
     responseHandler(res, {
       json: post,
-      statusCode: 200,
+      statusCode: GetPostResponse.code,
+      statusMessage: GetPostResponse.message,
     });
   }
 
   @Get('')
+  // swagger
+  @ApiOkResponse({ description: GetPostsResponse.message, type: GetPostsResponse.type, isArray: true })
   @ApiQuery({
     name: 'sortBy',
     description: '게시물 정렬 조건',
@@ -208,7 +261,8 @@ export default class PostController {
 
     responseHandler(res, {
       json: posts,
-      statusCode: 200,
+      statusCode: GetPostsResponse.code,
+      statusMessage: GetPostsResponse.message,
     });
   }
 }

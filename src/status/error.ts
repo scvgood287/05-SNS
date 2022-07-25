@@ -27,3 +27,8 @@ export const PostNotFound = {
   const: 404,
   message: '존재하지 않는 게시물입니다.',
 };
+
+export const UnAuthorizedToken = {
+  code: 401,
+  message: '',
+};

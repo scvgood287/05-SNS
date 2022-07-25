@@ -1,5 +1,16 @@
 import { Body, Controller, Post, Get, Res, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { SignUpGuard, LoginGuard, RefreshJWTGuard } from '../auth/guards';
 import { CreateUserDTO, LoginDTO } from './dto';
 import UserService from './user.service';
@@ -7,6 +18,14 @@ import { Response, Request } from 'express';
 import { CONSTANT_ACCESS, CONSTANT_REFRESH } from 'src/constants';
 import { defaultTokenCookieOption, responseHandler } from 'src/utils/response';
 import { hash } from 'src/utils/bcrypt';
+import {
+  UnAuthorizedToken,
+  UserAlreadyExistEmail,
+  UserAlreadyExistNickname,
+  UserNotFound,
+  WrongPassword,
+} from 'src/status/error';
+import { LoginResponse, RefreshTokenResponse, SignUpResponse } from 'src/status/success';
 
 @ApiTags('users')
 @Controller('users')
@@ -15,21 +34,29 @@ export default class UserController {
 
   @Post('signUp')
   @UseGuards(SignUpGuard)
+  // swagger
   @ApiBody({ type: CreateUserDTO })
+  @ApiBadRequestResponse({ description: UserAlreadyExistEmail.message })
+  @ApiBadRequestResponse({ description: UserAlreadyExistNickname.message })
+  @ApiCreatedResponse({ type: SignUpResponse.type, description: SignUpResponse.message })
   @ApiOperation({ description: '유저 회원가입 API 입니다.', summary: '유저 회원가입' })
   async signUp(@Res({ passthrough: true }) res: Response, @Body() createUserDTO: CreateUserDTO) {
     const user = await this.userService.signUp(createUserDTO);
 
     responseHandler(res, {
       json: user,
-      statusCode: 201,
+      statusCode: SignUpResponse.code,
+      statusMessage: SignUpResponse.message,
     });
   }
 
   @Post('login')
   @UseGuards(LoginGuard)
-  @ApiBearerAuth('Authorization')
+  // swagger
   @ApiBody({ type: LoginDTO })
+  @ApiNotFoundResponse({ description: UserNotFound.message })
+  @ApiBadRequestResponse({ description: WrongPassword.message })
+  @ApiOkResponse({ description: LoginResponse.message })
   @ApiOperation({ description: '유저 로그인 API 입니다.', summary: '유저 로그인' })
   async login(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
     const {
@@ -48,13 +75,18 @@ export default class UserController {
         [CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true)],
         [CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false)],
       ],
-      statusCode: 200,
+      statusCode: LoginResponse.code,
+      statusMessage: LoginResponse.message,
     });
   }
 
   @Get('refreshAccessToken')
   @UseGuards(RefreshJWTGuard)
-  @ApiBearerAuth('Authorization')
+  // swagger
+  @ApiUnauthorizedResponse({ description: UnAuthorizedToken.message })
+  @ApiNotFoundResponse({ description: UserNotFound.message })
+  @ApiOkResponse({ description: RefreshTokenResponse.message })
+  @ApiCookieAuth(CONSTANT_REFRESH)
   @ApiOperation({ description: '유저 토큰 재발급 API 입니다.', summary: '유저 토큰 재발급' })
   async refreshAccessToken(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
     const {
@@ -73,7 +105,8 @@ export default class UserController {
         [CONSTANT_ACCESS, accessToken, defaultTokenCookieOption(true)],
         [CONSTANT_REFRESH, refreshToken, defaultTokenCookieOption(false)],
       ],
-      statusCode: 200,
+      statusCode: RefreshTokenResponse.code,
+      statusMessage: RefreshTokenResponse.message,
     });
   }
 }

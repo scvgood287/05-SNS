@@ -5,7 +5,7 @@ import { OrderByEnum, SortOptions } from 'src/utils/customTypes';
 import { CreatePostDTO, UpdatePostDTO } from './dto';
 import GetPostsDTO from './dto/getPosts.dto';
 import PostRepository from './post.repository';
-import { Post, PostDocument } from './post.schema';
+import { Post, PostDocument, Posts } from './post.schema';
 
 @Injectable()
 export default class PostService {
@@ -25,7 +25,7 @@ export default class PostService {
 
   // 이 updatePost, deletePost, restorePost 각각 권한 처리, 에러 처리 리팩토링 필요.
   // 현재 같은 코드 반복 중. 권한 처리..는 Guard 에서 하기로
-  async updatePost(updatePostDTO: UpdatePostDTO, post: PostDocument): Promise<boolean> {
+  async updatePost(updatePostDTO: UpdatePostDTO, post: PostDocument) {
     // const post = await this.postRepository.updatePost(updatePostDTO, postId);
     // const post = await this.postRepository.getPostById(postId, { isDeleted: false });
 
@@ -33,9 +33,7 @@ export default class PostService {
       updatePostDTO.hashtags = (updatePostDTO.hashtags as string).slice(1).split(',#');
     }
 
-    const { acknowledged, matchedCount } = await this.postRepository.updateThisPost(updatePostDTO, post);
-
-    return acknowledged && matchedCount === 1;
+    await this.postRepository.updateThisPost(updatePostDTO, post);
   }
 
   async deletePost(postId): Promise<boolean> {
@@ -52,12 +50,12 @@ export default class PostService {
 
   async getPost(postId): Promise<Post> {
     const post = await this.postRepository.getPostById(postId, { isDeleted: false });
-    await this.postRepository.updateThisPost({ views: post.views + 1 }, post);
+    await this.postRepository.updateThisPost({}, post, { $inc: { views: 1 } });
 
     return post;
   }
 
-  async getPosts(getPostsDTO: GetPostsDTO): Promise<Post[]> {
+  async getPosts(getPostsDTO: GetPostsDTO): Promise<Posts> {
     const { sortBy, orderBy, search, hashtags, page, limit } = getPostsDTO;
 
     // 추후 복수 정렬 조건 구현

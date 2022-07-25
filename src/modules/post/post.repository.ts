@@ -4,7 +4,7 @@ import { FilterQuery, UpdateQuery } from 'mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { SortOptions } from 'src/utils/customTypes';
 import { UpdatePostDTO } from './dto';
-import { Post, PostDocument } from './post.schema';
+import { Post, PostDocument, Posts } from './post.schema';
 
 @Injectable()
 export default class PostRepository {
@@ -33,8 +33,8 @@ export default class PostRepository {
     return post;
   }
 
-  async updateThisPost(updatePostDTO: UpdatePostDTO, post: PostDocument) {
-    return await post.updateOne(updatePostDTO, { new: true });
+  async updateThisPost(updatePostDTO: UpdatePostDTO, post: PostDocument, updateQuery?: UpdateQuery<PostDocument>) {
+    return await post.updateOne({ ...updatePostDTO, ...updateQuery }, { new: true });
   }
 
   async deletePost(postId) {
@@ -55,7 +55,7 @@ export default class PostRepository {
     return post;
   }
 
-  async getPosts(filter: FilterQuery<Post>, sortOptions: SortOptions, page: number, limit: number): Promise<Post[]> {
+  async getPosts(filter: FilterQuery<Post>, sortOptions: SortOptions, page: number, limit: number): Promise<Posts> {
     const posts = await this.postModel
       .find(filter)
       .sort(sortOptions)

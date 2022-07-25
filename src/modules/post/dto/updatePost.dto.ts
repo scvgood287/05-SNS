@@ -13,7 +13,4 @@ export default class UpdatePostDTO {
   @ApiProperty({ description: '해시태그, #으로 시작하고 ,로 구분', example: '#맛집,#서울,#브런치 카페,#주말,#수정' })
   @IsString()
   hashtags?: string | string[];
-
-  @IsNumber()
-  views?: number;
 }
