@@ -1,7 +1,7 @@
 FROM node:16-alpine3.11
 
 WORKDIR /app
-COPY app .
+COPY . .
 RUN yarn install
 # 우선 ENV 이렇게 사용하지만 ENV 이름이 노출되므로 대안이 필요하다..
 ENV MONGO_DB_USERNAME=0 \
